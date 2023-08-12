@@ -19,3 +19,9 @@
 
 # Go workspace file
 go.work
+
+# Service binaries
+cmd/*/bin/*
+
+# Mac OS internal file
+.DS_Store

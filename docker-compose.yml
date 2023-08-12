@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  port-service:
+    build:
+      context: .
+      dockerfile: ./cmd/port-service/Dockerfile
+    ports:
+      - 8080:8080

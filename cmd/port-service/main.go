@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,12 +10,10 @@ import (
 	"time"
 
 	"github.com/dkhrunov/hexagonal-architecture/internal/config"
+	"github.com/dkhrunov/hexagonal-architecture/internal/services"
+	"github.com/dkhrunov/hexagonal-architecture/transport"
 	"github.com/gorilla/mux"
 )
-
-func init() {
-
-}
 
 func main() {
 	if err := run(); err != nil {
@@ -29,15 +26,15 @@ func run() error {
 	//  read config from env
 	cfg := config.Read()
 
+	// create port service
+	portService := services.NewPortService()
+
+	// create http server with application injecterd
+	httpServer := transport.NewHttpServer(portService)
+
 	// create http router
 	router := mux.NewRouter()
-	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]bool{
-			"pong": true,
-		})
-	}).Methods(http.MethodGet)
+	router.HandleFunc("/port", httpServer.GetPort).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Addr:    cfg.PortService.HTTPAddr,

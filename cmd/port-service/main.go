@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dkhrunov/hexagonal-architecture/internal/config"
+	"github.com/dkhrunov/hexagonal-architecture/internal/repository/inmem"
 	"github.com/dkhrunov/hexagonal-architecture/internal/services"
 	"github.com/dkhrunov/hexagonal-architecture/transport"
 	"github.com/gorilla/mux"
@@ -26,8 +27,11 @@ func run() error {
 	//  read config from env
 	cfg := config.Read()
 
+	// create port repository
+	portStore := inmem.NewPortInmemStore()
+
 	// create port service
-	portService := services.NewPortService()
+	portService := services.NewPortService(portStore)
 
 	// create http server with application injecterd
 	httpServer := transport.NewHttpServer(portService)
@@ -35,6 +39,8 @@ func run() error {
 	// create http router
 	router := mux.NewRouter()
 	router.HandleFunc("/port", httpServer.GetPort).Methods(http.MethodGet)
+	router.HandleFunc("/count", httpServer.CountPorts).Methods(http.MethodGet)
+	router.HandleFunc("/port", httpServer.UploadPorts).Methods(http.MethodPost)
 
 	srv := &http.Server{
 		Addr:    cfg.PortService.HTTPAddr,
@@ -55,11 +61,11 @@ func run() error {
 		close(stopped)
 	}()
 
-	log.Printf("Starting HTTP server on %v", cfg.PortService.HTTPAddr)
+	log.Printf("Starting HTTP Server on %v", cfg.PortService.HTTPAddr)
 
 	// start HTTP server
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+		log.Fatalf("HTTP Server ListenAndServe Error: %v", err)
 	}
 
 	<-stopped

@@ -27,7 +27,7 @@ func NotFound(slug string, err error, w http.ResponseWriter, r *http.Request) {
 func RespondWithError(err error, w http.ResponseWriter, r *http.Request) {
 	slugError, ok := err.(errors.SlugError)
 	if !ok {
-		InternalError("internal-server-error", err, w, r)
+		InternalError("internal server error", err, w, r)
 		return
 	}
 
@@ -46,13 +46,17 @@ func RespondWithError(err error, w http.ResponseWriter, r *http.Request) {
 func httpResponseWithError(slug string, err error, w http.ResponseWriter, r *http.Request, msg string, status int) {
 	log.Printf("error: %s, slug: %s, msg: %s", err, slug, msg)
 
-	resp := ErrorResponse{
-		Error: ErrorInfo{slug, err.Error(), status},
+	res := ErrorResponse{
+		Error: ErrorInfo{
+			Message:    slug,
+			Details:    err.Error(),
+			httpStatus: status,
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 type ErrorInfo struct {

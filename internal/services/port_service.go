@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/dkhrunov/hexagonal-architecture/internal/domain"
-	"github.com/dkhrunov/hexagonal-architecture/internal/repository"
 )
 
-// PortService is a port service
-type IPortService interface {
+// PortRepository is a port repository for the port service
+type PortRepository interface {
 	GetPort(ctx context.Context, id string) (*domain.Port, error)
 	CountPorts(ctx context.Context) (int, error)
 	CreateOrUpdatePort(ctx context.Context, port *domain.Port) error
@@ -16,11 +15,11 @@ type IPortService interface {
 
 // PortService is a port service
 type PortService struct {
-	repository repository.IPortRepository
+	repository PortRepository
 }
 
 // NewPortService creates a new port service
-func NewPortService(repository repository.IPortRepository) PortService {
+func NewPortService(repository PortRepository) PortService {
 	return PortService{
 		repository: repository,
 	}

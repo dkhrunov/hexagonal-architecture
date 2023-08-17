@@ -12,7 +12,7 @@ import (
 	"github.com/dkhrunov/hexagonal-architecture/internal/config"
 	"github.com/dkhrunov/hexagonal-architecture/internal/repository/inmem"
 	"github.com/dkhrunov/hexagonal-architecture/internal/services"
-	"github.com/dkhrunov/hexagonal-architecture/transport"
+	"github.com/dkhrunov/hexagonal-architecture/internal/transport"
 	"github.com/gorilla/mux"
 )
 

@@ -1,22 +1,29 @@
 package transport
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
 
 	"github.com/dkhrunov/hexagonal-architecture/internal/common/server"
 	"github.com/dkhrunov/hexagonal-architecture/internal/domain"
-	"github.com/dkhrunov/hexagonal-architecture/internal/services"
 )
+
+// PortService is a port service
+type PortService interface {
+	GetPort(ctx context.Context, id string) (*domain.Port, error)
+	CountPorts(ctx context.Context) (int, error)
+	CreateOrUpdatePort(ctx context.Context, port *domain.Port) error
+}
 
 // HttpServer is a HTTP server for ports
 type HttpServer struct {
-	service services.IPortService
+	service PortService
 }
 
 // NewHttpServer creates a new HTTP server for ports
-func NewHttpServer(service services.IPortService) HttpServer {
+func NewHttpServer(service PortService) HttpServer {
 	return HttpServer{
 		service: service,
 	}

@@ -69,19 +69,15 @@ func (h HttpServer) CountPorts(w http.ResponseWriter, r *http.Request) {
 
 func (h HttpServer) UploadPorts(w http.ResponseWriter, r *http.Request) {
 	log.Println("uploading ports...")
-
-	portChan := make(chan PortDto)
-	errChan := make(chan error)
 	doneChan := make(chan struct{})
-
+	stream := NewJSONStream()
 	go func() {
-		err := readPorts(r.Context(), r.Body, portChan)
-		if err != nil {
-			errChan <- err
-		} else {
+		defer func() {
 			doneChan <- struct{}{}
-		}
+		}()
+		stream.Start(r.Context(), r.Body)
 	}()
+
 	portCounter := 0
 	for {
 		select {
@@ -92,21 +88,23 @@ func (h HttpServer) UploadPorts(w http.ResponseWriter, r *http.Request) {
 			log.Printf("finished reading ports")
 			server.RespondOk(map[string]int{"count": portCounter}, w, r)
 			return
-		case err := <-errChan:
-			log.Printf("error while parsing port json: %+v", err)
-			server.BadRequest("invalid json", err, w, r)
-			return
-		case port := <-portChan:
-			portCounter++
-			log.Printf("[%d] received port: %+v", portCounter, port)
-			p, err := portDtoToDomain(&port)
-			if err != nil {
-				server.BadRequest("can not convert dto port to domain", err, w, r)
+		case entry := <-stream.Watch():
+			if entry.Error != nil {
+				log.Printf("error while parsing port json: %+v", entry.Error)
+				server.BadRequest("invalid json", entry.Error, w, r)
 				return
-			}
-			if err := h.service.CreateOrUpdatePort(r.Context(), p); err != nil {
-				server.RespondWithError(err, w, r)
-				return
+			} else {
+				portCounter++
+				log.Printf("[%d] received port: %+v", portCounter, entry.Data)
+				p, err := portDtoToDomain(&entry.Data)
+				if err != nil {
+					server.BadRequest("can not convert dto port to domain", err, w, r)
+					return
+				}
+				if err := h.service.CreateOrUpdatePort(r.Context(), p); err != nil {
+					server.RespondWithError(err, w, r)
+					return
+				}
 			}
 		}
 	}

@@ -39,6 +39,7 @@ func Test_portStoreToDomain(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := PortEntityToDomain(tt.args.p)
+
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
